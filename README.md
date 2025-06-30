@@ -85,16 +85,16 @@ future.
 ## 📜 License & Attribution
 
 This project is licensed under the **MIT License** - see
-the [LICENSE](https://github.com/starichkov/kafka-python-demo/blob/main/LICENSE.md) file for details.
+the [LICENSE](https://github.com/starichkov/kafka-golang-demo/blob/main/LICENSE.md) file for details.
 
 ### Using This Project?
 
 If you use this code in your own projects, attribution is required under the MIT License:
 
 ```
-Based on kafka-python-demo by Vadim Starichkov, TemplateTasks
+Based on kafka-golang-demo by Vadim Starichkov, TemplateTasks
 
-https://github.com/starichkov/kafka-python-demo
+https://github.com/starichkov/kafka-golang-demo
 ```
 
 **Copyright © 2025 Vadim Starichkov, TemplateTasks**
