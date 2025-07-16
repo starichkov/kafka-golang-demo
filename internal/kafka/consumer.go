@@ -60,5 +60,8 @@ loop:
 }
 
 func (co *Consumer) Close() {
-	co.c.Close()
+	err := co.c.Close()
+	if err != nil {
+		return
+	}
 }

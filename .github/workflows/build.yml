@@ -38,10 +38,9 @@ jobs:
           fi
 
       - name: Run golangci-lint
-        uses: golangci/golangci-lint-action@v4
+        uses: golangci/golangci-lint-action@v8
         with:
-          version: v1.64.8
-          args: --timeout 3m
+          version: v2.2
 
   integration-tests:
     runs-on: ubuntu-22.04
