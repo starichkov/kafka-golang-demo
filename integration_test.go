@@ -15,7 +15,8 @@ func TestKafkaIntegration(t *testing.T) {
 	ctx := context.Background()
 
 	// Start Kafka container
-	kafkaContainer, err := kafkacontainer.RunContainer(ctx,
+	kafkaContainer, err := kafkacontainer.Run(ctx,
+		"confluentinc/cp-kafka:7.5.9",
 		kafkacontainer.WithClusterID("test-cluster"),
 	)
 	if err != nil {

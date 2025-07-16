@@ -9,9 +9,8 @@ import (
 )
 
 type Consumer struct {
-	c      KafkaConsumerInterface
-	topic  string
-	cancel context.CancelFunc
+	c     KafkaConsumerInterface
+	topic string
 }
 
 func NewConsumer(brokers, groupID, topic string) (*Consumer, error) {
