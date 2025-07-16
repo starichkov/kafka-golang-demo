@@ -10,12 +10,6 @@ Docker Compose.
 
 *This project has been created with assistance from JetBrains Junie to evaluate its capabilities and to speed up development process.*
 
-## 👨‍💻 Author
-
-**Vadim Starichkov** | [GitHub](https://github.com/starichkov) | [LinkedIn](https://www.linkedin.com/in/vadim-starichkov/)
-
-*Developed to demonstrate modern Golang development practices and patterns, with Apache Kafka integration using containerized and testable architecture.*
-
 ## 🧱 Project Structure
 
 ```
