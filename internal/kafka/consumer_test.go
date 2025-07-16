@@ -2,6 +2,7 @@ package kafka
 
 import (
 	"context"
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"testing"
 	"time"
 )
@@ -197,34 +198,52 @@ func TestConsumer_RunWithMessageCount(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), tt.timeout)
 			defer cancel()
 
+			msgCh := make(chan *kafka.Message)
 			done := make(chan bool, 1)
 
-			go consumer.RunWithMessageCount(ctx, tt.expectedCount, done)
+			go func() {
+				received := 0
+				for {
+					select {
+					case <-ctx.Done():
+						done <- false // Did not reach the expected count
+						return
+					case <-msgCh:
+						received++
+						if received >= tt.expectedCount {
+							done <- true // Got enough messages
+							return
+						}
+					}
+				}
+			}()
+
+			go consumer.RunWithChannel(ctx, msgCh)
 
 			if tt.expectedCount == 0 {
-				// For zero messages, we expect the function to complete immediately
 				select {
 				case <-done:
 					// Expected behavior for zero messages
 				case <-time.After(100 * time.Millisecond):
-					// This is also acceptable - the function might wait for context cancellation
+					// Acceptable: function might wait for context cancellation
 				}
 			} else {
-				// For non-zero messages, we expect either completion or timeout
 				select {
-				case <-done:
-					// Messages were received (unlikely without a producer)
+				case got := <-done:
+					if !got {
+						t.Logf("Did not receive expected number of messages, likely due to no producer running")
+					}
 				case <-ctx.Done():
 					// Context timeout (expected when no messages are available)
 				case <-time.After(tt.timeout + 500*time.Millisecond):
-					t.Errorf("RunWithMessageCount() did not respect context timeout")
+					t.Errorf("Test timed out waiting for messages")
 				}
 			}
 		})
 	}
 }
 
-func TestConsumer_RunWithMessageCount_ContextCancellation(t *testing.T) {
+func TestConsumer_Run_ContextCancellation(t *testing.T) {
 	// Skip if Kafka is not available
 	consumer, err := NewConsumer("localhost:9092", "test-group", "test-topic")
 	if err != nil {
@@ -234,9 +253,14 @@ func TestConsumer_RunWithMessageCount_ContextCancellation(t *testing.T) {
 	defer consumer.Close()
 
 	ctx, cancel := context.WithCancel(context.Background())
-	done := make(chan bool, 1)
+	msgCh := make(chan *kafka.Message)
 
-	go consumer.RunWithMessageCount(ctx, 10, done)
+	done := make(chan struct{})
+
+	go func() {
+		consumer.RunWithChannel(ctx, msgCh)
+		close(done)
+	}()
 
 	// Cancel context after a short delay
 	go func() {
@@ -244,12 +268,12 @@ func TestConsumer_RunWithMessageCount_ContextCancellation(t *testing.T) {
 		cancel()
 	}()
 
-	// Function should exit due to context cancellation
+	// Test: Run should exit due to context cancellation
 	select {
 	case <-done:
-		// This might happen if messages are received quickly
+		// Consumer.Run exited as expected (context cancelled)
 	case <-time.After(1 * time.Second):
-		// Expected: function should exit due to context cancellation
+		t.Errorf("Consumer.Run() did not exit after context cancellation")
 	}
 }
 
@@ -324,7 +348,7 @@ func TestConsumer_ConcurrentRun(t *testing.T) {
 	}
 }
 
-func TestConsumer_RunWithMessageCount_EdgeCases(t *testing.T) {
+func TestConsumer_Run_EdgeCases(t *testing.T) {
 	// Skip if Kafka is not available
 	consumer, err := NewConsumer("localhost:9092", "test-group", "test-topic")
 	if err != nil {
@@ -355,18 +379,35 @@ func TestConsumer_RunWithMessageCount_EdgeCases(t *testing.T) {
 			ctx, cancel := context.WithTimeout(context.Background(), 200*time.Millisecond)
 			defer cancel()
 
-			done := make(chan bool, 1)
+			msgCh := make(chan *kafka.Message)
+			done := make(chan struct{})
 
-			// This should not panic regardless of the count value
-			go consumer.RunWithMessageCount(ctx, tt.expectedCount, done)
+			received := 0
 
-			select {
-			case <-done:
-				// Function completed
-			case <-ctx.Done():
-				// Context timeout (expected)
-			case <-time.After(500 * time.Millisecond):
-				t.Errorf("RunWithMessageCount() with %s did not respect context timeout", tt.description)
+			go func() {
+				consumer.RunWithChannel(ctx, msgCh)
+				close(done)
+			}()
+
+			// Edge cases:
+			// negative count: should exit after timeout without panicking
+			// very large count: should not panic, just time out (since not enough messages)
+			for {
+				select {
+				case <-msgCh:
+					received++
+					if tt.expectedCount > 0 && received >= tt.expectedCount {
+						// In practice, this won't be reached unless enough messages arrive.
+						cancel()
+					}
+				case <-done:
+					return // Consumer stopped gracefully
+				case <-ctx.Done():
+					return // Test ended due to timeout, expected in these edge cases
+				case <-time.After(500 * time.Millisecond):
+					t.Errorf("Run() with %s did not respect context timeout", tt.description)
+					return
+				}
 			}
 		})
 	}

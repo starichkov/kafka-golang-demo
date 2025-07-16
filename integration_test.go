@@ -7,6 +7,7 @@ import (
 	"testing"
 	"time"
 
+	ckafka "github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	kafkacontainer "github.com/testcontainers/testcontainers-go/modules/kafka"
 )
 
@@ -104,11 +105,27 @@ func testProducerConsumerFlow(t *testing.T, bootstrapServers, topic string) {
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 
-	messagesCompleted := make(chan bool, 1)
+	msgCh := make(chan *ckafka.Message)
+	done := make(chan bool, 1)
+
 	go func() {
-		// Use the new RunWithMessageCount method to exit early when all messages are received
-		consumer.RunWithMessageCount(ctx, expectedMessageCount, messagesCompleted)
+		received := 0
+		for {
+			select {
+			case <-ctx.Done():
+				done <- false
+				return
+			case <-msgCh:
+				received++
+				if received >= expectedMessageCount {
+					done <- true
+					return
+				}
+			}
+		}
 	}()
+
+	go consumer.RunWithChannel(ctx, msgCh)
 
 	// Give consumer time to start
 	time.Sleep(2 * time.Second)
@@ -123,8 +140,12 @@ func testProducerConsumerFlow(t *testing.T, bootstrapServers, topic string) {
 
 	// Wait for all messages to be processed or timeout
 	select {
-	case <-messagesCompleted:
-		t.Log("All expected messages received successfully")
+	case got := <-done:
+		if got {
+			t.Log("All expected messages received successfully")
+		} else {
+			t.Error("Test finished but not all messages received")
+		}
 	case <-ctx.Done():
 		t.Log("Test completed within timeout")
 	}
