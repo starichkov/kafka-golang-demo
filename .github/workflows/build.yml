@@ -25,5 +25,10 @@ jobs:
       - name: Build
         run: go build -v ./...
 
-      - name: Run integration tests
-        run: go test -v ./integration_test.go
+      - name: Run integration tests with coverage
+        run: go test -race -coverprofile=coverage.txt -covermode=atomic ./...
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}

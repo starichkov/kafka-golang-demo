@@ -9,13 +9,13 @@ import (
 )
 
 type Consumer struct {
-	c      *kafka.Consumer
+	c      KafkaConsumerInterface
 	topic  string
 	cancel context.CancelFunc
 }
 
 func NewConsumer(brokers, groupID, topic string) (*Consumer, error) {
-	c, err := kafka.NewConsumer(&kafka.ConfigMap{
+	c, err := ConsumerFactory.NewConsumer(&kafka.ConfigMap{
 		"bootstrap.servers": brokers,
 		"group.id":          groupID,
 		"auto.offset.reset": "earliest",

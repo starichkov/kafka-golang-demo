@@ -6,12 +6,12 @@ import (
 )
 
 type Producer struct {
-	p     *kafka.Producer
+	p     KafkaProducerInterface
 	topic string
 }
 
 func NewProducer(brokers, topic string) (*Producer, error) {
-	p, err := kafka.NewProducer(&kafka.ConfigMap{
+	p, err := ProducerFactory.NewProducer(&kafka.ConfigMap{
 		"bootstrap.servers": brokers,
 	})
 	if err != nil {
