@@ -12,7 +12,12 @@ func main() {
 		brokers = "localhost:9092"
 	}
 
-	producer, err := kafka.NewProducer(brokers, "demo-topic")
+	topic := os.Getenv("TOPIC")
+	if topic == "" {
+		topic = "demo-topic"
+	}
+
+	producer, err := kafka.NewProducer(brokers, topic)
 	if err != nil {
 		panic(err)
 	}

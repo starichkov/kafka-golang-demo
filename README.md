@@ -1,6 +1,7 @@
 # Golang Kafka Demo
 
 [![Author](https://img.shields.io/badge/Author-Vadim%20Starichkov-blue?style=for-the-badge)](https://github.com/starichkov)
+[![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/starichkov/kafka-golang-demo/build.yml?style=for-the-badge)](https://github.com/starichkov/kafka-golang-demo/actions/workflows/build.yml)
 [![GitHub License](https://img.shields.io/github/license/starichkov/kafka-golang-demo?style=for-the-badge)](https://github.com/starichkov/kafka-golang-demo/blob/main/LICENSE.md)
 
 This project demonstrates a basic Apache Kafka setup using Go (Golang) producers and consumers, fully containerized with
@@ -60,12 +61,48 @@ Set in `docker-compose.yml` as environment variables:
 | `TOPIC`                   | Kafka topic name               |
 | `GROUP_ID`                | Consumer group ID (optional)   |
 
+## 🧪 Integration Tests
+
+This project includes comprehensive integration tests using [Testcontainers](https://golang.testcontainers.org/) that spin up a real Kafka instance to test the producer and consumer functionality.
+
+### Running Integration Tests
+
+```bash
+go test -v ./integration_test.go
+```
+
+### What the Tests Cover
+
+The integration tests include:
+
+1. **Producer Test**: Verifies that the producer can successfully create and send messages to Kafka
+2. **Consumer Test**: Verifies that the consumer can be created and configured properly
+3. **Producer-Consumer Flow Test**: End-to-end test that:
+   - Starts a real Kafka container using Testcontainers
+   - Creates both producer and consumer
+   - Sends multiple test messages
+   - Verifies that messages are received by the consumer
+
+### Test Configuration
+
+- Uses `confluentinc/confluent-local:7.5.0` Kafka image (compatible with Testcontainers)
+- Creates isolated test topics for each test run
+- Automatically handles container lifecycle (start/stop/cleanup)
+- Tests run with a 30-second timeout to ensure reliability
+
+### Prerequisites for Testing
+
+- Docker must be running (Testcontainers requires Docker)
+- Go 1.24.5 or later
+- Internet connection (to pull Kafka container image on first run)
+
 ## 📦 Dependencies
 
-- Go 1.24.4
+- Go 1.24.5
 - [confluent-kafka-go](https://github.com/confluentinc/confluent-kafka-go)
 - [librdkafka](https://github.com/confluentinc/librdkafka)
 - Apache Kafka official Docker image
+- [testcontainers-go](https://github.com/testcontainers/testcontainers-go) (for integration tests)
 
 ## 📌 Notes
 

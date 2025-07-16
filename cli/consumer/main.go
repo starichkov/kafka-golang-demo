@@ -15,7 +15,17 @@ func main() {
 		brokers = "localhost:9092"
 	}
 
-	consumer, err := kafka.NewConsumer(brokers, "golang-demo-group", "demo-topic")
+	topic := os.Getenv("TOPIC")
+	if topic == "" {
+		topic = "demo-topic"
+	}
+
+	groupID := os.Getenv("GROUP_ID")
+	if groupID == "" {
+		groupID = "golang-demo-group"
+	}
+
+	consumer, err := kafka.NewConsumer(brokers, groupID, topic)
 	if err != nil {
 		panic(err)
 	}

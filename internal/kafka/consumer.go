@@ -53,6 +53,35 @@ loop:
 	}
 }
 
+// RunWithMessageCount runs the consumer and signals completion after receiving expectedCount messages
+func (co *Consumer) RunWithMessageCount(ctx context.Context, expectedCount int, done chan<- bool) {
+	receivedCount := 0
+loop:
+	for {
+		select {
+		case <-ctx.Done():
+			break loop
+		default:
+			msg, err := co.c.ReadMessage(500 * time.Millisecond)
+			if err != nil {
+				if kafkaErr, ok := err.(kafka.Error); ok && kafkaErr.IsTimeout() {
+					continue
+				}
+				fmt.Printf("❌ Consumer error: %v\n", err)
+				continue
+			}
+			fmt.Printf("📥 Received: %s from %s [%d] offset %d\n",
+				string(msg.Value), *msg.TopicPartition.Topic, msg.TopicPartition.Partition, msg.TopicPartition.Offset)
+
+			receivedCount++
+			if receivedCount >= expectedCount {
+				done <- true
+				break loop
+			}
+		}
+	}
+}
+
 func (co *Consumer) Close() {
 	co.c.Close()
 }
