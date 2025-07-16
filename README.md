@@ -8,7 +8,7 @@
 This project demonstrates a basic Apache Kafka setup using Go (Golang) producers and consumers, fully containerized with
 Docker Compose.
 
-*This project has been created with assistance from JetBrains Junie to evaluate its capabilities and to speed up development process.*
+*This project has been created with assistance from JetBrains Junie to evaluate its capabilities and to speed up the development process.*
 
 ## 🧱 Project Structure
 
@@ -90,18 +90,18 @@ The integration tests include:
 
 - Uses `confluentinc/confluent-local:7.5.0` Kafka image (compatible with Testcontainers)
 - Creates isolated test topics for each test run
-- Automatically handles container lifecycle (start/stop/cleanup)
+- Automatically handles the container lifecycle (start/stop/cleanup)
 - Tests run with a 30-second timeout to ensure reliability
 
 ### Prerequisites for Testing
 
-- Docker must be running (Testcontainers requires Docker)
-- Go 1.24.5 or later
+- Docker must be running (Testcontainers require Docker)
+- Go 1.21.x and later
 - Internet connection (to pull Kafka container image on first run)
 
 ## 📦 Dependencies
 
-- Go 1.24.5
+- Go 1.21.x
 - [confluent-kafka-go](https://github.com/confluentinc/confluent-kafka-go)
 - [librdkafka](https://github.com/confluentinc/librdkafka)
 - Apache Kafka official Docker image
@@ -125,7 +125,7 @@ All code is released under permissive open-source licenses. The legal structure 
 
 ## 📜 License & Attribution
 
-This project is licensed under the **MIT License** - see
+This project is licensed under the **MIT License** — see
 the [LICENSE](https://github.com/starichkov/kafka-golang-demo/blob/main/LICENSE.md) file for details.
 
 ### Using This Project?
