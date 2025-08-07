@@ -2,10 +2,10 @@ package kafka
 
 import (
 	"context"
-	"fmt"
 	"time"
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"kafka-golang-demo/internal/logging"
 )
 
 type Consumer struct {
@@ -47,11 +47,14 @@ loop:
 				if kafkaErr, ok := err.(kafka.Error); ok && kafkaErr.IsTimeout() {
 					continue
 				}
-				fmt.Printf("❌ Consumer error: %v\n", err)
+				logging.Logger.Error("Consumer error", "error", err)
 				continue
 			}
-			fmt.Printf("📥 Received: %s from %s [%d] offset %d\n",
-				string(msg.Value), *msg.TopicPartition.Topic, msg.TopicPartition.Partition, msg.TopicPartition.Offset)
+			logging.Logger.Info("Message received",
+				"message", string(msg.Value),
+				"topic", *msg.TopicPartition.Topic,
+				"partition", msg.TopicPartition.Partition,
+				"offset", msg.TopicPartition.Offset)
 			if msgCh != nil {
 				msgCh <- msg
 			}

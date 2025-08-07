@@ -2,7 +2,8 @@ package main
 
 import (
 	"fmt"
-	"golang-kafka-demo/internal/kafka"
+	"kafka-golang-demo/internal/kafka"
+	"kafka-golang-demo/internal/logging"
 	"os"
 )
 
@@ -26,6 +27,7 @@ func main() {
 	for i := 0; i < 10; i++ {
 		msg := fmt.Sprintf("Message #%d", i)
 		_ = producer.Send(msg)
+		logging.Logger.Info("Message sent", "number", i, "message", msg)
 	}
 }
 

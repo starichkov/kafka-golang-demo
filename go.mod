@@ -1,4 +1,4 @@
-module golang-kafka-demo
+module kafka-golang-demo
 
 go 1.24.5
 

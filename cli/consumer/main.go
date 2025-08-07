@@ -6,7 +6,7 @@ import (
 	"os/signal"
 	"syscall"
 
-	"golang-kafka-demo/internal/kafka"
+	"kafka-golang-demo/internal/kafka"
 )
 
 func main() {

@@ -2,7 +2,7 @@ package main
 
 import (
 	"context"
-	"golang-kafka-demo/internal/kafka"
+	"kafka-golang-demo/internal/kafka"
 	"strings"
 	"testing"
 	"time"

@@ -1,8 +1,8 @@
 package kafka
 
 import (
-	"fmt"
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
+	"kafka-golang-demo/internal/logging"
 )
 
 type Producer struct {
@@ -23,9 +23,9 @@ func NewProducer(brokers, topic string) (*Producer, error) {
 		for e := range p.Events() {
 			if ev, ok := e.(*kafka.Message); ok {
 				if ev.TopicPartition.Error != nil {
-					fmt.Printf("❌ Delivery failed: %v\n", ev.TopicPartition)
+					logging.Logger.Error("Delivery failed", "error", ev.TopicPartition.Error, "topic_partition", ev.TopicPartition)
 				} else {
-					fmt.Printf("✅ Delivered to %v\n", ev.TopicPartition)
+					logging.Logger.Info("Message delivered", "topic", *ev.TopicPartition.Topic, "partition", ev.TopicPartition.Partition, "offset", ev.TopicPartition.Offset)
 				}
 			}
 		}
