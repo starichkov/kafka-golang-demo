@@ -348,6 +348,66 @@ func TestConsumer_ConcurrentRun(t *testing.T) {
 	}
 }
 
+func TestConsumer_StatisticsEventHandling(t *testing.T) {
+	mockFactory, cleanup := setupMockConsumer()
+	defer cleanup()
+
+	consumer, err := NewConsumer("localhost:9092", "test-group", "test-topic")
+	if err != nil {
+		t.Fatalf("Failed to create consumer: %v", err)
+	}
+	defer consumer.Close()
+
+	// Get the mock consumer
+	mockConsumers := mockFactory.GetConsumers()
+	if len(mockConsumers) != 1 {
+		t.Fatalf("Expected 1 mock consumer, got %d", len(mockConsumers))
+	}
+	mockConsumer := mockConsumers[0]
+
+	// Send a statistics event to the consumer
+	statsEvent := &kafka.Stats{}
+	mockConsumer.events <- statsEvent
+
+	// Give some time for event processing
+	time.Sleep(100 * time.Millisecond)
+
+	// Test should complete without panicking
+	// The actual metrics processing is tested in metrics package tests
+}
+
+func TestConsumer_ConfigurationWithStatistics(t *testing.T) {
+	mockFactory, cleanup := setupMockConsumer()
+	defer cleanup()
+
+	consumer, err := NewConsumer("localhost:9092", "test-group", "test-topic")
+	if err != nil {
+		t.Fatalf("Failed to create consumer: %v", err)
+	}
+	defer consumer.Close()
+
+	// Verify that the consumer was created (this indirectly tests that
+	// the statistics.interval.ms configuration was set correctly)
+	if consumer == nil {
+		t.Error("Consumer should not be nil")
+	}
+
+	if consumer.topic != "test-topic" {
+		t.Errorf("Expected topic 'test-topic', got %s", consumer.topic)
+	}
+
+	// Test that the Events() channel is available on the mock consumer
+	mockConsumers := mockFactory.GetConsumers()
+	if len(mockConsumers) != 1 {
+		t.Fatalf("Expected 1 mock consumer, got %d", len(mockConsumers))
+	}
+	mockConsumer := mockConsumers[0]
+
+	if mockConsumer.Events() == nil {
+		t.Error("Consumer Events() channel should not be nil")
+	}
+}
+
 func TestConsumer_Run_EdgeCases(t *testing.T) {
 	// Skip if Kafka is not available
 	consumer, err := NewConsumer("localhost:9092", "test-group", "test-topic")

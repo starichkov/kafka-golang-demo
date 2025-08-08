@@ -1,10 +1,15 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"kafka-golang-demo/internal/kafka"
 	"kafka-golang-demo/internal/logging"
+	"kafka-golang-demo/internal/metrics"
 	"os"
+	"os/signal"
+	"syscall"
+	"time"
 )
 
 func main() {
@@ -18,16 +23,63 @@ func main() {
 		topic = "demo-topic"
 	}
 
+	metricsAddr := os.Getenv("METRICS_ADDR")
+	if metricsAddr == "" {
+		metricsAddr = ":8080"
+	}
+
+	// Start metrics server
+	metricsServer := metrics.NewServer(metricsAddr)
+	go func() {
+		if err := metricsServer.Start(); err != nil {
+			logging.Logger.Error("Metrics server failed", "error", err)
+		}
+	}()
+
+	// Handle graceful shutdown
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
+
+	sigs := make(chan os.Signal, 1)
+	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		<-sigs
+		logging.Logger.Info("Received shutdown signal")
+		cancel()
+	}()
+
+	// Create producer
 	producer, err := kafka.NewProducer(brokers, topic)
 	if err != nil {
 		panic(err)
 	}
 	defer producer.Close()
 
+	// Send messages
 	for i := 0; i < 10; i++ {
-		msg := fmt.Sprintf("Message #%d", i)
-		_ = producer.Send(msg)
-		logging.Logger.Info("Message sent", "number", i, "message", msg)
+		select {
+		case <-ctx.Done():
+			break
+		default:
+			msg := fmt.Sprintf("Message #%d", i)
+			_ = producer.Send(msg)
+			logging.Logger.Info("Message sent", "number", i, "message", msg)
+			time.Sleep(1 * time.Second) // Allow time for metrics to be collected
+		}
+	}
+
+	logging.Logger.Info("Producer finished, metrics available", "metrics_endpoint", fmt.Sprintf("http://localhost%s/metrics", metricsAddr))
+	
+	// Keep running to allow metrics collection
+	<-ctx.Done()
+	
+	// Graceful shutdown
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdownCancel()
+	
+	if err := metricsServer.Stop(shutdownCtx); err != nil {
+		logging.Logger.Error("Error stopping metrics server", "error", err)
 	}
 }
 

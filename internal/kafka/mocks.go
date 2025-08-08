@@ -109,6 +109,7 @@ func (m *MockProducer) IsClosed() bool {
 // MockConsumer implements KafkaConsumerInterface for testing
 type MockConsumer struct {
 	messages     chan *kafka.Message
+	events       chan kafka.Event
 	closed       bool
 	mutex        sync.RWMutex
 	topics       []string
@@ -119,6 +120,7 @@ type MockConsumer struct {
 func NewMockConsumer() *MockConsumer {
 	return &MockConsumer{
 		messages: make(chan *kafka.Message, 100),
+		events:   make(chan kafka.Event, 100),
 		topics:   make([]string, 0),
 	}
 }
@@ -162,6 +164,10 @@ func (m *MockConsumer) ReadMessage(timeout time.Duration) (*kafka.Message, error
 	}
 }
 
+func (m *MockConsumer) Events() chan kafka.Event {
+	return m.events
+}
+
 func (m *MockConsumer) Close() error {
 	m.mutex.Lock()
 	defer m.mutex.Unlock()
@@ -169,6 +175,7 @@ func (m *MockConsumer) Close() error {
 	if !m.closed {
 		m.closed = true
 		close(m.messages)
+		close(m.events)
 	}
 	return nil
 }

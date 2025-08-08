@@ -3,6 +3,8 @@ package kafka
 import (
 	"testing"
 	"time"
+	
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
 // setupMockProducer sets up a mock producer factory for testing
@@ -231,6 +233,107 @@ func TestProducer_Close(t *testing.T) {
 
 	// Test that calling Close multiple times doesn't panic
 	producer.Close()
+}
+
+func TestProducer_StatisticsEventHandling(t *testing.T) {
+	mockFactory, cleanup := setupMockProducer()
+	defer cleanup()
+
+	producer, err := NewProducer("localhost:9092", "test-topic")
+	if err != nil {
+		t.Fatalf("Failed to create producer: %v", err)
+	}
+	defer producer.Close()
+
+	// Get the mock producer
+	mockProducers := mockFactory.GetProducers()
+	if len(mockProducers) != 1 {
+		t.Fatalf("Expected 1 mock producer, got %d", len(mockProducers))
+	}
+	mockProducer := mockProducers[0]
+
+
+	// Send a statistics event to the producer
+	statsEvent := &kafka.Stats{}
+	// We can't easily set the internal JSON string in the Stats event,
+	// so we'll test that the event processing doesn't panic
+	mockProducer.events <- statsEvent
+
+	// Give some time for event processing
+	time.Sleep(100 * time.Millisecond)
+
+	// Test should complete without panicking
+	// The actual metrics processing is tested in metrics package tests
+}
+
+func TestProducer_MessageEventHandling(t *testing.T) {
+	mockFactory, cleanup := setupMockProducer()
+	defer cleanup()
+
+	producer, err := NewProducer("localhost:9092", "test-topic")
+	if err != nil {
+		t.Fatalf("Failed to create producer: %v", err)
+	}
+	defer producer.Close()
+
+	// Get the mock producer
+	mockProducers := mockFactory.GetProducers()
+	if len(mockProducers) != 1 {
+		t.Fatalf("Expected 1 mock producer, got %d", len(mockProducers))
+	}
+	mockProducer := mockProducers[0]
+
+	// Send a message first
+	err = producer.Send("test message")
+	if err != nil {
+		t.Fatalf("Failed to send message: %v", err)
+	}
+
+	// Give time for background event processing
+	time.Sleep(100 * time.Millisecond)
+
+	// Verify the message was processed (stored in mock)
+	messages := mockProducer.GetMessages()
+	if len(messages) == 0 {
+		t.Error("Expected at least one message to be stored")
+	}
+
+	// Test that message events are handled without panicking
+	topic := "test-topic"
+	partition := int32(0)
+	offset := kafka.Offset(0)
+
+	// Create a successful delivery message event
+	successEvent := &kafka.Message{
+		TopicPartition: kafka.TopicPartition{
+			Topic:     &topic,
+			Partition: partition,
+			Offset:    offset,
+		},
+		Value: []byte("test message"),
+	}
+
+	// Send the event
+	mockProducer.events <- successEvent
+
+	// Create a failed delivery message event
+	failedEvent := &kafka.Message{
+		TopicPartition: kafka.TopicPartition{
+			Topic:     &topic,
+			Partition: partition,
+			Error:     kafka.NewError(kafka.ErrMsgTimedOut, "Message timed out", false),
+		},
+		Value: []byte("failed message"),
+	}
+
+	// Send the failed event
+	mockProducer.events <- failedEvent
+
+	// Give time for event processing
+	time.Sleep(100 * time.Millisecond)
+
+	// Test should complete without panicking
+	// The actual logging is tested implicitly (no assertion needed for logs)
 }
 
 func TestProducer_SendAfterClose(t *testing.T) {

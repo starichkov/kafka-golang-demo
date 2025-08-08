@@ -4,6 +4,7 @@ package kafka
 import (
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"kafka-golang-demo/internal/logging"
+	"kafka-golang-demo/internal/metrics"
 )
 
 // Producer wraps a Kafka producer with additional functionality like structured logging
@@ -25,20 +26,27 @@ type Producer struct {
 // Returns a configured Producer instance or an error if initialization fails.
 func NewProducer(brokers, topic string) (*Producer, error) {
 	p, err := ProducerFactory.NewProducer(&kafka.ConfigMap{
-		"bootstrap.servers": brokers,
+		"bootstrap.servers":      brokers,
+		"statistics.interval.ms": 5000, // Enable statistics collection every 5 seconds
 	})
 	if err != nil {
 		return nil, err
 	}
 
-	// Background delivery report logger
+	// Background delivery report logger and metrics processor
 	go func() {
 		for e := range p.Events() {
-			if ev, ok := e.(*kafka.Message); ok {
+			switch ev := e.(type) {
+			case *kafka.Message:
 				if ev.TopicPartition.Error != nil {
 					logging.Logger.Error("Delivery failed", "error", ev.TopicPartition.Error, "topic_partition", ev.TopicPartition)
 				} else {
 					logging.Logger.Info("Message delivered", "topic", *ev.TopicPartition.Topic, "partition", ev.TopicPartition.Partition, "offset", ev.TopicPartition.Offset)
+				}
+			case *kafka.Stats:
+				// Process librdkafka statistics for Prometheus metrics
+				if err := metrics.ProcessLibrdkafkaStats(ev.String()); err != nil {
+					logging.Logger.Error("Failed to process Kafka statistics", "error", err)
 				}
 			}
 		}

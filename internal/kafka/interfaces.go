@@ -23,6 +23,7 @@ type KafkaProducerInterface interface {
 type KafkaConsumerInterface interface {
 	SubscribeTopics(topics []string, rebalanceCb kafka.RebalanceCb) error
 	ReadMessage(timeout time.Duration) (*kafka.Message, error)
+	Events() chan kafka.Event
 	Close() error
 }
 

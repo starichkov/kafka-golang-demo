@@ -7,6 +7,7 @@ import (
 
 	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"kafka-golang-demo/internal/logging"
+	"kafka-golang-demo/internal/metrics"
 )
 
 // Consumer wraps a Kafka consumer with additional functionality like structured logging,
@@ -29,9 +30,10 @@ type Consumer struct {
 // Returns a configured Consumer instance or an error if initialization or subscription fails.
 func NewConsumer(brokers, groupID, topic string) (*Consumer, error) {
 	c, err := ConsumerFactory.NewConsumer(&kafka.ConfigMap{
-		"bootstrap.servers": brokers,
-		"group.id":          groupID,
-		"auto.offset.reset": "earliest",
+		"bootstrap.servers":      brokers,
+		"group.id":               groupID,
+		"auto.offset.reset":      "earliest",
+		"statistics.interval.ms": 5000, // Enable statistics collection every 5 seconds
 	})
 	if err != nil {
 		return nil, err
@@ -41,6 +43,18 @@ func NewConsumer(brokers, groupID, topic string) (*Consumer, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	// Start background statistics processor
+	go func() {
+		for e := range c.Events() {
+			if statsEvent, ok := e.(*kafka.Stats); ok {
+				// Process librdkafka statistics for Prometheus metrics
+				if err := metrics.ProcessLibrdkafkaStats(statsEvent.String()); err != nil {
+					logging.Logger.Error("Failed to process consumer Kafka statistics", "error", err)
+				}
+			}
+		}
+	}()
 
 	return &Consumer{c: c, topic: topic}, nil
 }

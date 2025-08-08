@@ -2,11 +2,15 @@ package main
 
 import (
 	"context"
+	"fmt"
 	"os"
 	"os/signal"
 	"syscall"
+	"time"
 
 	"kafka-golang-demo/internal/kafka"
+	"kafka-golang-demo/internal/logging"
+	"kafka-golang-demo/internal/metrics"
 )
 
 func main() {
@@ -25,6 +29,20 @@ func main() {
 		groupID = "golang-demo-group"
 	}
 
+	metricsAddr := os.Getenv("METRICS_ADDR")
+	if metricsAddr == "" {
+		metricsAddr = ":8081"
+	}
+
+	// Start metrics server
+	metricsServer := metrics.NewServer(metricsAddr)
+	go func() {
+		if err := metricsServer.Start(); err != nil {
+			logging.Logger.Error("Metrics server failed", "error", err)
+		}
+	}()
+
+	// Create consumer
 	consumer, err := kafka.NewConsumer(brokers, groupID, topic)
 	if err != nil {
 		panic(err)
@@ -38,10 +56,21 @@ func main() {
 	signal.Notify(sigs, syscall.SIGINT, syscall.SIGTERM)
 	go func() {
 		<-sigs
+		logging.Logger.Info("Received shutdown signal")
 		cancel()
 	}()
 
+	logging.Logger.Info("Consumer started, metrics available", "metrics_endpoint", fmt.Sprintf("http://localhost%s/metrics", metricsAddr))
+
 	consumer.Run(ctx)
+
+	// Graceful shutdown
+	shutdownCtx, shutdownCancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer shutdownCancel()
+
+	if err := metricsServer.Stop(shutdownCtx); err != nil {
+		logging.Logger.Error("Error stopping metrics server", "error", err)
+	}
 }
 
 //package main
