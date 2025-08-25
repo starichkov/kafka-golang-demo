@@ -88,7 +88,7 @@ The integration tests include:
 
 ### Test Configuration
 
-- Uses `confluentinc/confluent-local:7.5.0` Kafka image (compatible with Testcontainers)
+- Uses `confluentinc/cp-kafka:7.9.2` Kafka image (compatible with Testcontainers)
 - Creates isolated test topics for each test run
 - Automatically handles the container lifecycle (start/stop/cleanup)
 - Tests run with a 30-second timeout to ensure reliability
