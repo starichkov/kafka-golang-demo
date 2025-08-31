@@ -1,5 +1,5 @@
 # ---- Build stage (glibc base) ----
-FROM golang:1.24.5-bookworm AS producer_builder
+FROM golang:1.24.6-bookworm AS producer_builder
 
 RUN apt-get update && apt-get install -y librdkafka-dev
 
