@@ -41,13 +41,19 @@ func (m *MockProducer) Produce(msg *kafka.Message, deliveryChan chan kafka.Event
 
 	// Send delivery report
 	go func() {
+		// Safely copy error state under read lock to avoid races with SetError
+		m.mutex.RLock()
+		shouldErr := m.shouldError
+		errMsg := m.errorMessage
+		m.mutex.RUnlock()
+
 		deliveryMsg := &kafka.Message{
 			TopicPartition: msg.TopicPartition,
 			Value:          msg.Value,
 		}
 
-		if m.shouldError {
-			deliveryMsg.TopicPartition.Error = fmt.Errorf("%s", m.errorMessage)
+		if shouldErr {
+			deliveryMsg.TopicPartition.Error = fmt.Errorf("%s", errMsg)
 		}
 
 		// Hold the lock while checking closed status and sending to prevent race
