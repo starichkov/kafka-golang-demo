@@ -1,6 +1,7 @@
 # Golang Kafka Demo
 
 [![Author](https://img.shields.io/badge/Author-Vadim%20Starichkov-blue?style=for-the-badge)](https://github.com/starichkov)
+![GitHub go.mod Go version](https://img.shields.io/github/go-mod/go-version/starichkov/kafka-golang-demo?style=for-the-badge)
 [![GitHub License](https://img.shields.io/github/license/starichkov/kafka-golang-demo?style=for-the-badge)](https://github.com/starichkov/kafka-golang-demo/blob/main/LICENSE.md)
 [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/starichkov/kafka-golang-demo/build.yml?style=for-the-badge)](https://github.com/starichkov/kafka-golang-demo/actions/workflows/build.yml)
 [![Codecov](https://img.shields.io/codecov/c/github/starichkov/kafka-golang-demo?style=for-the-badge)](https://codecov.io/gh/starichkov/kafka-golang-demo)
