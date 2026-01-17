@@ -6,128 +6,130 @@
 [![GitHub Actions Workflow Status](https://img.shields.io/github/actions/workflow/status/starichkov/kafka-golang-demo/build.yml?style=for-the-badge)](https://github.com/starichkov/kafka-golang-demo/actions/workflows/build.yml)
 [![Codecov](https://img.shields.io/codecov/c/github/starichkov/kafka-golang-demo?style=for-the-badge)](https://codecov.io/gh/starichkov/kafka-golang-demo)
 
-This project demonstrates a basic Apache Kafka setup using Go (Golang) producers and consumers, fully containerized with
-Docker Compose.
+This project demonstrates a basic Apache Kafka setup using Go (Golang) producers and consumers, fully containerized with Docker Compose. It uses the `confluent-kafka-go` client and runs Kafka in **KRaft mode**.
 
 *This project has been created with assistance from JetBrains Junie to evaluate its capabilities and to speed up the development process.*
 
-## 🧱 Project Structure
+## 🚀 Key Features
 
-```
-.
-├── cli/
-│   ├── producer/       # Go CLI producer
-│   └── consumer/       # Go CLI consumer
-├── internal/kafka/     # Shared Kafka wrapper logic
-├── docker-compose.yml  # Kafka + apps
-├── go.mod / go.sum     # Go modules
-└── README.md
-```
+- **Kafka 3.9.1 in KRaft mode** (no Zookeeper required).
+- **Go Producer & Consumer** using `confluent-kafka-go` (v2).
+- **Structured Logging** using `log/slog`.
+- **Fully Containerized** with multi-stage Alpine-based Docker builds.
+- **Resilient**: Kafka health checks with delayed startup for clients and auto-restart policies.
+- **Automated Setup**: Auto topic creation via Kafka config and a setup container.
+- **Testing**: Includes unit tests with mocks and integration tests using [Testcontainers](https://golang.testcontainers.org/).
 
-## 🚀 Features
+## 📋 Requirements
 
-- Kafka 3.9.1 in **KRaft mode** (no Zookeeper)
-- Go producer and consumer using `confluent-kafka-go`
-- Multi-stage Alpine-based Docker builds
-- Kafka health checks with delayed startup for clients
-- Auto topic creation via Kafka config
+- **Go**: 1.25.6 or later.
+- **librdkafka**: Required for `confluent-kafka-go`. Must be installed on the host system for local builds.
+- **Docker & Docker Compose**: Required for running the full stack and integration tests.
 
-## 🧪 Usage
+## 🏁 Getting Started
 
-### 1. Build and Run
+### Run with Docker Compose
+
+The easiest way to run the entire stack:
 
 ```bash
 docker compose up --build
 ```
 
 This will:
+1. Start Kafka in KRaft mode.
+2. Wait until Kafka is healthy.
+3. Create the required topics.
+4. Run the Go producer (sends 10 messages and exits).
+5. Run the Go consumer (continuously prints incoming messages).
 
-- Start Kafka in KRaft mode
-- Wait until Kafka is healthy
-- Run the Go producer once (sends 10 messages)
-- Run the Go consumer (prints incoming messages)
+### Local Execution
 
-### 2. Kafka Admin (optional)
+To build and run the components locally, ensure `librdkafka` is installed and Kafka is accessible.
 
-To list topics manually (inside the Kafka container):
-
+**Build:**
 ```bash
-docker exec -it kafka kafka-topics.sh --bootstrap-server localhost:9092 --list
+CGO_ENABLED=1 go build -o producer ./cli/producer
+CGO_ENABLED=1 go build -o consumer ./cli/consumer
+```
+
+**Run:**
+```bash
+# Ensure environment variables are set or use defaults
+./producer
+./consumer
 ```
 
 ## 🛠 Configuration
 
-Set in `docker-compose.yml` as environment variables:
+Configuration is handled via environment variables.
 
-| Variable                  | Description                    |
-|---------------------------|--------------------------------|
-| `KAFKA_BOOTSTRAP_SERVERS` | Kafka bootstrap address (host) |
-| `TOPIC`                   | Kafka topic name               |
-| `GROUP_ID`                | Consumer group ID (optional)   |
+| Variable | Description | Default |
+|----------|-------------|---------|
+| `KAFKA_BOOTSTRAP_SERVERS` | Kafka bootstrap address | `localhost:9092` |
+| `TOPIC` | Kafka topic name | `demo-topic` |
+| `GROUP_ID` | Consumer group ID | `golang-demo-group` |
 
-## 🧪 Integration Tests
+## 🧪 Testing
 
-This project includes comprehensive integration tests using [Testcontainers](https://golang.testcontainers.org/) that spin up a real Kafka instance to test the producer and consumer functionality.
-
-### Running Integration Tests
+### Unit Tests
+Unit tests use a factory pattern and mocks for Kafka dependencies.
 
 ```bash
-go test -v ./integration_test.go
+go test -v ./internal/kafka
 ```
 
-### What the Tests Cover
+### Integration Tests
+Integration tests spin up a real Kafka instance in a Docker container.
 
-The integration tests include:
+```bash
+go test -v integration_test.go
+```
+*Note: Docker must be running. The first run might take longer to pull the Kafka image (`confluentinc/cp-kafka:7.9.3`).*
 
-1. **Producer Test**: Verifies that the producer can successfully create and send messages to Kafka
-2. **Consumer Test**: Verifies that the consumer can be created and configured properly
-3. **Producer-Consumer Flow Test**: End-to-end test that:
-   - Starts a real Kafka container using Testcontainers
-   - Creates both producer and consumer
-   - Sends multiple test messages
-   - Verifies that messages are received by the consumer
+For more testing options and coverage reports, see [TESTING.md](TESTING.md).
 
-### Test Configuration
+## 📚 Documentation
 
-- Uses `confluentinc/cp-kafka:7.9.3` Kafka image (compatible with Testcontainers)
-- Creates isolated test topics for each test run
-- Automatically handles the container lifecycle (start/stop/cleanup)
-- Tests run with a 30-second timeout to ensure reliability
+- [DOCUMENTATION.md](DOCUMENTATION.md): Guide on using Go's documentation tools (`go doc`, `godoc`).
+- [TESTING.md](TESTING.md): Testing and coverage commands cheat sheet.
 
-### Prerequisites for Testing
+## 🧱 Project Structure
 
-- Docker must be running (Testcontainers require Docker)
-- Go 1.21.x and later
-- Internet connection (to pull Kafka container image on first run)
+```
+.
+├── cli/
+│   ├── producer/       # Go producer CLI entry point
+│   └── consumer/       # Go consumer CLI entry point
+├── internal/
+│   ├── kafka/          # Kafka wrapper logic, interfaces, and mocks
+│   └── logging/        # Structured JSON logging utilities
+├── docker-compose.yml  # Kafka and applications orchestration
+├── go.mod / go.sum     # Go modules and dependencies
+├── integration_test.go # End-to-end integration tests
+└── README.md
+```
 
 ## 📦 Dependencies
 
-- Go 1.21.x
-- [confluent-kafka-go](https://github.com/confluentinc/confluent-kafka-go)
-- [librdkafka](https://github.com/confluentinc/librdkafka)
-- Apache Kafka official Docker image
-- [testcontainers-go](https://github.com/testcontainers/testcontainers-go) (for integration tests)
+- [confluent-kafka-go/v2](https://github.com/confluentinc/confluent-kafka-go): Kafka client for Go.
+- [testcontainers-go](https://github.com/testcontainers/testcontainers-go): For integration testing.
+- [Apache Kafka](https://kafka.apache.org/): Distributed event streaming platform.
 
 ## 📌 Notes
 
-- Docker Compose waits for Kafka to be fully ready using health checks.
-- Messages may show connection errors briefly until Kafka becomes available.
-- Uses `libc6-compat` to run glibc-linked Go binaries on Alpine.
+- **Alpine & CGO**: Uses `libc6-compat` in Docker images to support the C-linked `confluent-kafka-go`.
+- **Startup**: Messages may show brief connection errors until the Kafka broker is fully ready.
 
 ---
 
 ## 🧾 About TemplateTasks
 
-TemplateTasks is a personal software development initiative by Vadim Starichkov, focused on sharing open-source libraries, services, and technical demos.
-
-It operates independently and outside the scope of any employment.
-
-All code is released under permissive open-source licenses. The legal structure may evolve as the project grows.
+TemplateTasks is a personal software development initiative by Vadim Starichkov, focused on sharing open-source libraries, services, and technical demos. It operates independently and outside the scope of any employment.
 
 ## 📜 License & Attribution
 
-This project is licensed under the **MIT License** — see
-the [LICENSE](https://github.com/starichkov/kafka-golang-demo/blob/main/LICENSE.md) file for details.
+This project is licensed under the **MIT License** — see the [LICENSE](LICENSE.md) file for details.
 
 ### Using This Project?
 
@@ -135,7 +137,6 @@ If you use this code in your own projects, attribution is required under the MIT
 
 ```
 Based on kafka-golang-demo by Vadim Starichkov, TemplateTasks
-
 https://github.com/starichkov/kafka-golang-demo
 ```
 
