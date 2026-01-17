@@ -1,5 +1,5 @@
 # ---- Build stage (glibc base) ----
-FROM golang:1.25.6-alpine3.23 AS producer_builder
+FROM golang:1.25.6-trixie AS producer_builder
 
 RUN apt-get update && apt-get install -y librdkafka-dev
 
