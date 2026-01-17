@@ -1,6 +1,6 @@
 module kafka-golang-demo
 
-go 1.25.3
+go 1.25.6
 
 require (
 	github.com/confluentinc/confluent-kafka-go/v2 v2.12.0
