@@ -36,7 +36,7 @@ Integration tests use [Testcontainers](https://golang.testcontainers.org/) to sp
 ```bash
 go test -v integration_test.go
 ```
-Note: Integration tests might take some time as they pull the Kafka image (`confluentinc/cp-kafka:7.9.3`) and wait for the container to start.
+Note: Integration tests might take some time as they pull the Kafka image (`confluentinc/cp-kafka:7.9.5`) and wait for the container to start.
 
 ### Mocking Strategy
 We use a factory pattern to inject mock producers and consumers. See `internal/kafka/interfaces.go` for the interface definitions and `internal/kafka/mocks.go` for the mock implementations.

@@ -1,6 +1,6 @@
 services:
   kafka:
-    image: apache/kafka:3.9.1
+    image: apache/kafka:3.9.2
     container_name: kafka
     ports:
       - "9092:9092"
@@ -24,7 +24,7 @@ services:
       start_period: 10s
 
   kafka-setup:
-    image: apache/kafka:3.9.1
+    image: apache/kafka:3.9.2
     container_name: kafka-setup
     depends_on:
       kafka:

@@ -12,7 +12,7 @@ This project demonstrates a basic Apache Kafka setup using Go (Golang) producers
 
 ## 🚀 Key Features
 
-- **Kafka 3.9.1 in KRaft mode** (no Zookeeper required).
+- **Kafka 3.9.2 in KRaft mode** (no Zookeeper required).
 - **Go Producer & Consumer** using `confluent-kafka-go` (v2).
 - **Structured Logging** using `log/slog`.
 - **Fully Containerized** with multi-stage Alpine-based Docker builds.
@@ -85,7 +85,7 @@ Integration tests spin up a real Kafka instance in a Docker container.
 ```bash
 go test -v integration_test.go
 ```
-*Note: Docker must be running. The first run might take longer to pull the Kafka image (`confluentinc/cp-kafka:7.9.3`).*
+*Note: Docker must be running. The first run might take longer to pull the Kafka image (`confluentinc/cp-kafka:7.9.5`).*
 
 For more testing options and coverage reports, see [TESTING.md](TESTING.md).
 
