@@ -5,8 +5,9 @@ import (
 	"context"
 	"time"
 
-	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"kafka-golang-demo/internal/logging"
+
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
 // Consumer wraps a Kafka consumer with additional functionality like structured logging,

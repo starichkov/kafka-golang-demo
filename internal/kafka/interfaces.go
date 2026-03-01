@@ -3,8 +3,9 @@
 package kafka
 
 import (
-	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"time"
+
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
 // KafkaProducerInterface abstracts the kafka.Producer functionality for dependency injection.

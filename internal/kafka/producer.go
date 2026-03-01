@@ -2,8 +2,9 @@
 package kafka
 
 import (
-	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"kafka-golang-demo/internal/logging"
+
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
 // Producer wraps a Kafka producer with additional functionality like structured logging

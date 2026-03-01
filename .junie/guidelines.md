@@ -5,7 +5,7 @@ This document provides project-specific information for developers working on th
 ## 1. Build/Configuration Instructions
 
 ### Prerequisites
-- **Go 1.25.6** or later.
+- **Go 1.25.7** or later.
 - **librdkafka**: The `confluent-kafka-go` client is a C wrapper and requires `librdkafka` to be installed on the host system for local builds with `CGO_ENABLED=1`.
 - **Docker**: Required for running Kafka via Docker Compose and for integration tests (Testcontainers).
 

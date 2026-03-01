@@ -2,9 +2,10 @@ package kafka
 
 import (
 	"fmt"
-	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 	"sync"
 	"time"
+
+	"github.com/confluentinc/confluent-kafka-go/v2/kafka"
 )
 
 // MockProducer implements KafkaProducerInterface for testing

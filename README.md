@@ -22,7 +22,7 @@ This project demonstrates a basic Apache Kafka setup using Go (Golang) producers
 
 ## 📋 Requirements
 
-- **Go**: 1.25.6 or later.
+- **Go**: 1.25.7 or later.
 - **librdkafka**: Required for `confluent-kafka-go`. Must be installed on the host system for local builds.
 - **Docker & Docker Compose**: Required for running the full stack and integration tests.
 
