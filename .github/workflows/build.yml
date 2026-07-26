@@ -1,7 +1,7 @@
 name: Build and Test
 
 env:
-  GO_LATEST: '1.25.7'
+  GO_LATEST: '1.25.12'
 
 on:
   push:

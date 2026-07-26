@@ -1,4 +1,4 @@
-FROM golang:1.25.7-alpine3.23 AS builder
+FROM golang:1.25.12-alpine3.24 AS builder
 WORKDIR /app
 COPY go.mod go.sum ./
 RUN go mod download
@@ -10,7 +10,7 @@ WORKDIR /app
 COPY --from=builder /app/consumer .
 CMD ["./consumer"]
 
-FROM golang:1.25.7-alpine3.23
+FROM golang:1.25.12-alpine3.24
 
 # Required for confluent-kafka-go (via CGO)
 RUN apk add --no-cache \
