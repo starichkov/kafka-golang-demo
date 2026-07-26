@@ -12,7 +12,7 @@ COPY . .
 RUN CGO_ENABLED=1 GOOS=linux go build -o app ./cli/producer
 
 # ---- Final image (Alpine base) ----
-FROM alpine:3.23
+FROM alpine:3.24
 
 RUN apk add --no-cache libc6-compat
 
